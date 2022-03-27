@@ -1,0 +1,16 @@
+dash>=1.6.1
+pandas
+scipy
+scikit-learn>=0.20.1
+colour
+GEOparse>=1.1.0
+jsonschema
+parmed
+periodictable
+requests
+
+[:python_version == "2.7"]
+biopython==1.76
+
+[:python_version >= "3.0"]
+biopython>=1.77
