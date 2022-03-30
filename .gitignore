@@ -206,3 +206,4 @@ Thumbs.db
 */conf.py
 *.rst
 */.DS_Store
+*/.idea/*
