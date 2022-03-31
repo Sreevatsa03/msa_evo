@@ -7,4 +7,6 @@ all = 'data_sources/P53_test_data/all.fasta'
 fastas = [dog, human, all]
 
 align = Align()
-print(align.read_fasta(fastas))
+print(align.read_fasta(all))
+
+print(align.sum_pairs_score())
