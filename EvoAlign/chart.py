@@ -8,23 +8,8 @@ class Chart():
 
     def __init__(self):
         pass
-    
-    def fasta_dict(files):
 
-        fasta_dict = {}
-
-        for filename in files:
-            species = filename.split('/')[-1][:-6]
-            with open(filename, 'r', encoding='utf-8') as infile:
-                for line in infile:
-                    line = line.replace('\n', '')
-
-                    if '[' not in line:
-                        fasta_dict[species] = fasta_dict.get(species, '') + line
-
-        return fasta_dict
-
-    def alignment_chart(filename=None):
+    def alignment_chart(self, filename=None):
         app = Dash()
 
         # fasta = urlreq.urlopen('https://git.io/alignment_viewer_p53.fasta').read().decode('utf-8')
