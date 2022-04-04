@@ -1,12 +1,15 @@
 from Bio import SeqIO
 import numpy as np
 from collections import Counter
+import itertools
 
 class Align():
 
     def __init__(self):
         self.seqs = []
+        self.str_seqs = []
 
+    # this calls read_fasta
     def _read_fasta(self, files):
         """ Read in fasta file(s)
 
@@ -19,14 +22,14 @@ class Align():
 
         # recursively convert amino acid sequence to numpy character array for each sequence in fasta file
         if type(files) == list:
-            fastas = [self.read_fasta(file) for file in files]
+            fastas = [self._read_fasta(file) for file in files]
             self.seqs = [seq for fasta in fastas for seq in fasta]
             return self.seqs
 
         # parse fasta file
         fasta_sequences = SeqIO.parse(open(files),'fasta')
 
-        # get string for each seq in file and convert to list
+        # get list of individual string characters for each seq in file and convert to list
         self.seqs = [list(str(fasta.seq)) for fasta in fasta_sequences]
 
         # convert sequence strings to numpy character arrays
@@ -34,6 +37,7 @@ class Align():
 
         # return seqs
         return self.seqs
+
     
     def _add_trailing(self):
         """ Add trailing '-' characters to end of sequence arrays """
@@ -81,3 +85,82 @@ class Align():
 
         # return score
         return score
+
+    # https://tiefenauer.github.io/blog/smith-waterman/
+    @staticmethod
+    def _matrix(a, b, match_score=3, gap_cost=2):
+        """ gets matrix of alignment for smith waterman algorithm
+
+            Args:
+
+            Returns:
+
+        """
+
+        # H is the np array of scores
+        H = np.zeros((len(a) + 1, len(b) + 1), int)
+
+        # itertools makes nested for loop
+        for i, j in itertools.product(range(1, H.shape[0]), range(1, H.shape[1])):
+
+            # if a and b align at this spot, add the match score to the score from left diagonal
+            # if they don't, then subtract the match score from left diagonal
+            match = H[i - 1, j - 1] + (match_score if a[i - 1] == b[j - 1] else - match_score)
+
+            # delete score, subtract from score immediately left
+            delete = H[i - 1, j] - gap_cost
+
+            # insert score, subtract from score above
+            insert = H[i, j - 1] - gap_cost
+
+            # set the matrix equal to the highest val (min is 0)
+            H[i, j] = max(match, delete, insert, 0)
+
+        return H
+
+    @staticmethod
+    def _traceback(H, b, b_='', old_i=0):
+        # flip H to get index of **last** occurrence of H.max() with np.argmax()
+        # 2 np flips (0 then 1) https://numpy.org/doc/stable/reference/generated/numpy.flip.html
+        # maintains individual row order, but row positions are reversed (top row as bottom row, etc.)
+        H_flip = np.flip(np.flip(H, 0), 1)
+
+        # iterates through matrix to find the the location (i_, j_) of the max val
+        i_, j_ = np.unravel_index(H_flip.argmax(), H_flip.shape)
+
+        # convert i_, j_ from H_flip back into i,j from H
+        i, j = np.subtract(H.shape, (i_ + 1, j_ + 1))  # (i, j) are **last** indexes of H.max()
+
+        # if the max val is zero, return empty string and j
+        if H[i, j] == 0:
+            return b_, j
+
+        #
+        b_ = b[j - 1] + '-' + b_ if old_i - i > 1 else b[j - 1] + b_
+        return Align._traceback(H[0:i, 0:j], b, b_, i)
+
+    @staticmethod
+    def _smith_waterman(a, b, match_score, gap_cost):
+        a, b = a.upper(), b.upper()
+        H = Align._matrix(a, b, match_score, gap_cost)
+        b_, pos = Align._traceback(H, b)
+        return pos, pos + len(b_)
+
+    def align_smith_waterman(self, match_score=3, gap_cost=2):
+        """
+
+        """
+        # create string version
+
+
+        for a, b in zip(self.str_seqs, self.str_seqs[1:]):
+
+            # TEST
+            print('a', a)
+            print('b', b)
+
+            start, end = smith_waterman(a, b, match_score=match_score, gap_cost=gap_cost)
+            print(a[start:end])
+            return a[start:end]
+
+
