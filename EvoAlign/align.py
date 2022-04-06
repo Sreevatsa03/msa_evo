@@ -80,11 +80,18 @@ class Align():
         # Initialize score
         score = 0
 
-        # If amino acids are the same, add 1; if different, subtract 1 from score
-        for pos in self.seqs.T:
-            score += sum([1 if x == y else -1 for i, x in enumerate(pos) for j, y in enumerate(pos) if i > j])
+        # Iterates through each position in the alignment
+        for pos in self.seqs.T[::-1]:
 
-        # return score
+            # 1 for a match and then -1 if mismatch
+            match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
+                                for j, y in enumerate(pos) if i > j])
+
+            # Subtracts 1 at each position if a gap is present
+            gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
+                              for j, y in enumerate(pos) if i > j])
+
+            score += match_score + gap_score
         return score
 
 
@@ -96,14 +103,17 @@ class Align():
         """
 
         # Initialize score
-        score = 0
+        gap_score = 0
 
-        # If amino acids are the same, add 1; if different, subtract 1 from score
+        # Iterates through each position in the alignment
         for pos in self.seqs.T:
-            score += sum([1 if x == y else -1 for i, x in enumerate(pos) for j, y in enumerate(pos) if i > j])
+
+            # Subtracts 1 at each position if a gap is present
+            gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
+                             for j, y in enumerate(pos) if i > j])
 
         # return score
-        return score
+        return gap_score
 
 
     def count_matches(self):
@@ -114,14 +124,17 @@ class Align():
         """
 
         # Initialize score
-        score = 0
+        match_score = 0
 
-        # If amino acids are the same, add 1; if different, subtract 1 from score
+        # Iterates through each position in the alignment
         for pos in self.seqs.T:
-            score += sum([1 if x == y else -1 for i, x in enumerate(pos) for j, y in enumerate(pos) if i > j])
+
+            # 1 for a match and then -1 if mismatch
+            match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
+                               for j, y in enumerate(pos) if i > j])
 
         # return score
-        return score
+        return match_score
 
     # https://tiefenauer.github.io/blog/smith-waterman/
     @staticmethod
@@ -191,7 +204,7 @@ class Align():
 
 
         for a, b in zip(self.str_seqs, self.str_seqs[1:]):
-            start, end = smith_waterman(a, b, match_score=match_score, gap_cost=gap_cost)
+            start, end = Align._smith_waterman(a, b, match_score=match_score, gap_cost=gap_cost)
             print(a[start:end])
             return a[start:end]
 
