@@ -4,6 +4,7 @@ import dash_bio as dashbio
 from Bio import SeqIO
 from Bio.Align.Applications import MuscleCommandline
 
+
 class Chart():
 
     def __init__(self):

@@ -3,6 +3,7 @@ import numpy as np
 from collections import Counter
 import itertools
 
+
 class Align():
 
     def __init__(self):
@@ -38,7 +39,6 @@ class Align():
         # return seqs
         return self.seqs
 
-    
     def _add_trailing(self):
         """ Add trailing '-' characters to end of sequence arrays """
 
@@ -46,14 +46,15 @@ class Align():
         max_seq = max([len(seq) for seq in self.seqs])
 
         # add trailing characters to arrays
-        self.seqs = [np.concatenate((seq, np.full(fill_value='-', shape=max_seq - len(seq)))) for seq in self.seqs]
+        self.seqs = [np.concatenate(
+            (seq, np.full(fill_value='-', shape=max_seq - len(seq)))) for seq in self.seqs]
 
     def read_fasta(self, files):
-        """ User function to read in and format fasta files of amino acid sequences """       
+        """ User function to read in and format fasta files of amino acid sequences """
 
         # read in fasta file
         self._read_fasta(files)
-        
+
         # add trailing sequences
         self._add_trailing()
 
@@ -68,7 +69,6 @@ class Align():
         """
 
         return self.seqs
-
 
     def sum_pairs_score(self):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
@@ -85,15 +85,14 @@ class Align():
 
             # 1 for a match and then -1 if mismatch
             match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
-                                for j, y in enumerate(pos) if i > j])
+                               for j, y in enumerate(pos) if i > j])
 
             # Subtracts 1 at each position if a gap is present
             gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
-                              for j, y in enumerate(pos) if i > j])
+                             for j, y in enumerate(pos) if i > j])
 
             score += match_score + gap_score
         return score
-
 
     def count_gaps(self):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
@@ -114,7 +113,6 @@ class Align():
 
         # return score
         return gap_score
-
 
     def count_matches(self):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
@@ -155,7 +153,8 @@ class Align():
 
             # if a and b align at this spot, add the match score to the score from left diagonal
             # if they don't, then subtract the match score from left diagonal
-            match = H[i - 1, j - 1] + (match_score if a[i - 1] == b[j - 1] else - match_score)
+            match = H[i - 1, j - 1] + \
+                (match_score if a[i - 1] == b[j - 1] else - match_score)
 
             # delete score, subtract from score immediately left
             delete = H[i - 1, j] - gap_cost
@@ -179,7 +178,8 @@ class Align():
         i_, j_ = np.unravel_index(H_flip.argmax(), H_flip.shape)
 
         # convert i_, j_ from H_flip back into i,j from H
-        i, j = np.subtract(H.shape, (i_ + 1, j_ + 1))  # (i, j) are **last** indexes of H.max()
+        # (i, j) are **last** indexes of H.max()
+        i, j = np.subtract(H.shape, (i_ + 1, j_ + 1))
 
         # if the max val is zero, return empty string and j
         if H[i, j] == 0:
@@ -202,11 +202,8 @@ class Align():
         """
         # create string version
 
-
         for a, b in zip(self.str_seqs, self.str_seqs[1:]):
-            start, end = Align._smith_waterman(a, b, match_score=match_score, gap_cost=gap_cost)
+            start, end = Align._smith_waterman(
+                a, b, match_score=match_score, gap_cost=gap_cost)
             print(a[start:end])
             return a[start:end]
-
-
-
