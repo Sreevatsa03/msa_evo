@@ -27,7 +27,7 @@ class Align():
             return self.seqs
 
         # parse fasta file
-        fasta_sequences = SeqIO.parse(open(files),'fasta')
+        fasta_sequences = SeqIO.parse(open(files), 'fasta')
 
         # get list of individual string characters for each seq in file and convert to list
         self.seqs = [list(str(fasta.seq)) for fasta in fasta_sequences]
@@ -69,6 +69,7 @@ class Align():
 
         return self.seqs
 
+
     def sum_pairs_score(self):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
 
@@ -81,7 +82,43 @@ class Align():
 
         # If amino acids are the same, add 1; if different, subtract 1 from score
         for pos in self.seqs.T:
-            score += sum([1 if x == y else -1 for i,x in enumerate(pos) for j,y in enumerate(pos) if i > j])
+            score += sum([1 if x == y else -1 for i, x in enumerate(pos) for j, y in enumerate(pos) if i > j])
+
+        # return score
+        return score
+
+
+    def count_gaps(self):
+        """ Calculates the sum of pairs for matches, mismatches, and gaps
+
+            Return:
+                score (int): sum of pairs score for the fasta array
+        """
+
+        # Initialize score
+        score = 0
+
+        # If amino acids are the same, add 1; if different, subtract 1 from score
+        for pos in self.seqs.T:
+            score += sum([1 if x == y else -1 for i, x in enumerate(pos) for j, y in enumerate(pos) if i > j])
+
+        # return score
+        return score
+
+
+    def count_matches(self):
+        """ Calculates the sum of pairs for matches, mismatches, and gaps
+
+            Return:
+                score (int): sum of pairs score for the fasta array
+        """
+
+        # Initialize score
+        score = 0
+
+        # If amino acids are the same, add 1; if different, subtract 1 from score
+        for pos in self.seqs.T:
+            score += sum([1 if x == y else -1 for i, x in enumerate(pos) for j, y in enumerate(pos) if i > j])
 
         # return score
         return score
