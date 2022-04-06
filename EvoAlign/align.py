@@ -191,13 +191,9 @@ class Align():
 
 
         for a, b in zip(self.str_seqs, self.str_seqs[1:]):
-
-            # TEST
-            print('a', a)
-            print('b', b)
-
             start, end = smith_waterman(a, b, match_score=match_score, gap_cost=gap_cost)
             print(a[start:end])
             return a[start:end]
+
 
 
