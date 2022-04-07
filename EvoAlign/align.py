@@ -7,8 +7,12 @@ import itertools
 class Align():
 
     def __init__(self):
+
+        # Numpy array of character arrays (with trailing gaps)
         self.seqs = []
-        self.str_seqs = []
+
+        # Star alignment matrix for selecting root sequence
+        self.star_matrix = []
 
     # this calls read_fasta
     def _read_fasta(self, files):
@@ -135,6 +139,83 @@ class Align():
         return match_score
 
     # https://tiefenauer.github.io/blog/smith-waterman/
+
+    @staticmethod
+    def _seq_comparison(a, b):
+        """ Calculates the comparison score of the inputted sequences
+
+            Args:
+                a (np.array): first sequence
+                b (np.array): second sequence
+
+            Return:
+                score (int): comparison score for inputted sequences
+        """
+
+        seq_array = np.array([a, b])
+
+        # Initialize score
+        score = 0
+
+        # Iterates through each position in the alignment
+        for pos in seq_array.T[::-1]:
+            # 1 for a match and then -1 if mismatch
+            match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
+                               for j, y in enumerate(pos) if i > j])
+
+            # Subtracts 1 at each position if a gap is present
+            gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
+                             for j, y in enumerate(pos) if i > j])
+
+            score += match_score + gap_score
+        return score
+
+    def get_star_matrix(self):
+        """Gets star alignment matrix (used to get root sequence)
+
+            Returns: self.star_matrix (np.array): star alignment matrix
+        """
+
+        # Check to make sure all sequences are the same length
+        # https://stackoverflow.com/questions/35791051/better-way-to-check-if-all-lists-in-a-list-are-the-same-length
+        it = iter(self.seqs)
+        the_len = len(next(it))
+        if not all(len(l) == the_len for l in it):
+            raise ValueError('not all sequences have same length!')
+
+        # Initialize the matrix (with a non-integer value that _seq_comparison won't return)
+        self.star_matrix = np.ones((len(self.seqs), len(self.seqs))) * 0.5#np.empty((len(self.seqs), len(self.seqs))) * np.nan
+
+        # Iterate through the rows and columns of the star matrix
+        for idx_row, row in enumerate(self.seqs):
+            for idx_col, col in enumerate(self.seqs):
+
+                # For non-diagonal comparisons
+                if idx_row != idx_col:
+
+                    # If score hasn't been calculated (default value is 0.5)
+                    if self.star_matrix[idx_row, idx_col] == 0.5:
+
+                        # Calculate score and assign to position and reverse position
+                        self.star_matrix[idx_row, idx_col] = Align._seq_comparison(row, col)
+                        self.star_matrix[idx_col, idx_row] = self.star_matrix[idx_row, idx_col]
+
+                # Reassign diagonal score from 0.5 to 0
+                else:
+                    self.star_matrix[idx_row, idx_col] = 0
+
+        return self.star_matrix
+
+    def get_root_seq(self):
+        """ Creates star alignment matrix to select root sequence
+            Uses sum_pair_scores to compare sequence similarity
+
+            Returns:
+                (np.array): Sequence with the highest similarity score
+                (most similar to all the sequences (root sequence))
+        """
+        return self.seqs[np.sum(self.get_star_matrix(), axis=1).argmax()]
+
     @staticmethod
     def _matrix(a, b, match_score=3, gap_cost=2):
         """ gets matrix of alignment for smith waterman algorithm

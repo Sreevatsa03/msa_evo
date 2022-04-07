@@ -11,9 +11,10 @@ fastas = [dog, human, all]
 align = Align()
 align.read_fasta(all)
 
-print(align.get_seqs())
+#print(align.get_seqs())
 
-print(align.sum_pairs_score())
+#print(align.sum_pairs_score())
+print(align.get_root_seq())
 
 """
 # prints correct scoring matrix from Wikipedia example
