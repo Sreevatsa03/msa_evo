@@ -13,17 +13,19 @@ align.read_fasta(all)
 
 #print(align.get_seqs())
 
-#print(align.sum_pairs_score())
-print(align.get_root_seq())
+# print(align.sum_pairs_score())
+# print(align.get_root_seq())
 
-"""
+# align.clustal()
+
+
 # prints correct scoring matrix from Wikipedia example
-print(matrix('GGTTGACTA', 'TGTTACGG', match_score=3, gap_cost=2))
+# print(align._matrix('GGTTGACTA', 'TGTTACGG'))
 
-a, b = 'ggttgacta', 'tgttacgg'
-H = matrix(a, b)
-print(traceback(H, b))  # ('gtt-ac', 1)
+# a, b = 'GGTTGACTA', 'TGTTACGG'
+# H = align._matrix(a, b)
+# print(align._traceback(H, b))  # ('gtt-ac', 1)
 
 a, b = 'GGTTGACTA', 'TGTTACGG'
-start, end = smith_waterman(a, b)
-print(a[start:end])  # GTTGAC"""
+start, end = align._smith_waterman(a, b)
+print(a[start:end])  # GTTGAC

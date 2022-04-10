@@ -2,6 +2,7 @@ from Bio import SeqIO
 import numpy as np
 from collections import Counter
 import itertools
+import copy
 
 
 class Align():
@@ -10,9 +11,6 @@ class Align():
 
         # Numpy array of character arrays (with trailing gaps)
         self.seqs = []
-
-        # Star alignment matrix for selecting root sequence
-        self.star_matrix = []
 
     # this calls read_fasta
     def _read_fasta(self, files):
@@ -184,7 +182,7 @@ class Align():
             raise ValueError('not all sequences have same length!')
 
         # Initialize the matrix (with a non-integer value that _seq_comparison won't return)
-        self.star_matrix = np.ones((len(self.seqs), len(self.seqs))) * 0.5#np.empty((len(self.seqs), len(self.seqs))) * np.nan
+        star_matrix = np.ones((len(self.seqs), len(self.seqs))) * 0.5 #np.empty((len(self.seqs), len(self.seqs))) * np.nan
 
         # Iterate through the rows and columns of the star matrix
         for idx_row, row in enumerate(self.seqs):
@@ -194,17 +192,17 @@ class Align():
                 if idx_row != idx_col:
 
                     # If score hasn't been calculated (default value is 0.5)
-                    if self.star_matrix[idx_row, idx_col] == 0.5:
+                    if star_matrix[idx_row, idx_col] == 0.5:
 
                         # Calculate score and assign to position and reverse position
-                        self.star_matrix[idx_row, idx_col] = Align._seq_comparison(row, col)
-                        self.star_matrix[idx_col, idx_row] = self.star_matrix[idx_row, idx_col]
+                        star_matrix[idx_row, idx_col] = self._seq_comparison(row, col)
+                        star_matrix[idx_col, idx_row] = star_matrix[idx_row, idx_col]
 
                 # Reassign diagonal score from 0.5 to 0
                 else:
-                    self.star_matrix[idx_row, idx_col] = 0
+                    star_matrix[idx_row, idx_col] = 0
 
-        return self.star_matrix
+        return star_matrix
 
     def get_root_seq(self):
         """ Creates star alignment matrix to select root sequence
@@ -214,10 +212,19 @@ class Align():
                 (np.array): Sequence with the highest similarity score
                 (most similar to all the sequences (root sequence))
         """
-        return self.seqs[np.sum(self.get_star_matrix(), axis=1).argmax()]
+        mat = self.get_star_matrix()
+
+        root_idx = np.sum(mat, axis=1).argmax()
+
+        if self.get_star_matrix()[root_idx].argmax() == root_idx:
+            max = np.sort(mat[root_idx])[-2]
+            max_idx = list(self.get_star_matrix()[root_idx]).index(max)
+
+        return root_idx, max_idx
+
 
     @staticmethod
-    def _matrix(a, b, match_score=3, gap_cost=2):
+    def _matrix(a, b, match_score=1, gap_cost=2):
         """ gets matrix of alignment for smith waterman algorithm
 
             Args:
@@ -268,23 +275,30 @@ class Align():
 
         #
         b_ = b[j - 1] + '-' + b_ if old_i - i > 1 else b[j - 1] + b_
+
         return Align._traceback(H[0:i, 0:j], b, b_, i)
 
     @staticmethod
-    def _smith_waterman(a, b, match_score, gap_cost):
-        a, b = a.upper(), b.upper()
+    def _smith_waterman(a, b, match_score=1, gap_cost=2):
+        """
+
+        """
         H = Align._matrix(a, b, match_score, gap_cost)
         b_, pos = Align._traceback(H, b)
         return pos, pos + len(b_)
 
-    def align_smith_waterman(self, match_score=3, gap_cost=2):
-        """
+    def clustal(self, match_score=1, gap_cost=2):
+        # intialize alignment _matrix
+        aligned = []
 
-        """
-        # create string version
+        # find initial root sequence and closest matching sequence
+        a, b = self.seqs[self.get_root_seq()[0]], self.seqs[self.get_root_seq()[1]]
 
-        for a, b in zip(self.str_seqs, self.str_seqs[1:]):
-            start, end = Align._smith_waterman(
-                a, b, match_score=match_score, gap_cost=gap_cost)
-            print(a[start:end])
-            return a[start:end]
+        # smith-waterman
+        start, end = self._smith_waterman(a, b, match_score, gap_cost)
+        print(a[start:end])
+
+        start_b, end_b = self._smith_waterman(b, a, match_score, gap_cost)
+        print(b[start_b:end_b])
+
+
