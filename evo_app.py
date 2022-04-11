@@ -1,3 +1,4 @@
+from re import A
 from EvoAlign import Align
 import itertools
 import numpy as np
@@ -22,10 +23,10 @@ align.read_fasta(all)
 # prints correct scoring matrix from Wikipedia example
 # print(align._matrix('GGTTGACTA', 'TGTTACGG'))
 
-# a, b = 'GGTTGACTA', 'TGTTACGG'
-# H = align._matrix(a, b)
-# print(align._traceback(H, b))  # ('gtt-ac', 1)
-
 a, b = 'GGTTGACTA', 'TGTTACGG'
-start, end = align._smith_waterman(a, b)
-print(a[start:end])  # GTTGAC
+H = align._matrix(a, b)
+print(align._traceback(H, b))
+
+# a, b = 'GGTTGACTA', 'TGTTACGG'
+# start, end = align._smith_waterman(a, b)
+# print(a[start:end])  # GTTGAC
