@@ -3,6 +3,7 @@ import numpy as np
 from collections import Counter
 import itertools
 import copy
+import blosum as bl
 
 
 class Align():
@@ -42,14 +43,14 @@ class Align():
         return self.seqs
 
     def _add_trailing(self):
-        """ Add trailing '-' characters to end of sequence arrays """
+        """ Add trailing '*' characters to end of sequence arrays """
 
         # get max length of sequences
         max_seq = max([len(seq) for seq in self.seqs])
 
         # add trailing characters to arrays
         self.seqs = [np.concatenate(
-            (seq, np.full(fill_value='-', shape=max_seq - len(seq)))) for seq in self.seqs]
+            (seq, np.full(fill_value='*', shape=max_seq - len(seq)))) for seq in self.seqs]
 
     def read_fasta(self, files):
         """ User function to read in and format fasta files of amino acid sequences """
@@ -72,7 +73,7 @@ class Align():
 
         return self.seqs
 
-    def sum_pairs_score(self):
+    def sum_pairs_score(self, matrix=bl.BLOSUM(62), gap_cost=1):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
 
             Return:
@@ -85,12 +86,12 @@ class Align():
         # Iterates through each position in the alignment
         for pos in self.seqs.T[::-1]:
 
-            # 1 for a match and then -1 if mismatch
-            match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
+            # use substition matrix to score matches and mismatches
+            match_score = sum([matrix[x + y] for i, x in enumerate(pos)
                                for j, y in enumerate(pos) if i > j])
 
             # Subtracts 1 at each position if a gap is present
-            gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
+            gap_score = sum([-gap_cost if '*' in (x, y) else 0 for i, x in enumerate(pos)
                              for j, y in enumerate(pos) if i > j])
 
             score += match_score + gap_score
@@ -110,7 +111,7 @@ class Align():
         for pos in self.seqs.T:
 
             # Subtracts 1 at each position if a gap is present
-            gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
+            gap_score = sum([-1 if '*' in (x, y) else 0 for i, x in enumerate(pos)
                              for j, y in enumerate(pos) if i > j])
 
         # return score
@@ -162,7 +163,7 @@ class Align():
                                for j, y in enumerate(pos) if i > j])
 
             # Subtracts 1 at each position if a gap is present
-            gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
+            gap_score = sum([-1 if '*' in (x, y) else 0 for i, x in enumerate(pos)
                              for j, y in enumerate(pos) if i > j])
 
             score += match_score + gap_score
@@ -182,7 +183,8 @@ class Align():
             raise ValueError('not all sequences have same length!')
 
         # Initialize the matrix (with a non-integer value that _seq_comparison won't return)
-        star_matrix = np.ones((len(self.seqs), len(self.seqs))) * 0.5 #np.empty((len(self.seqs), len(self.seqs))) * np.nan
+        # np.empty((len(self.seqs), len(self.seqs))) * np.nan
+        star_matrix = np.ones((len(self.seqs), len(self.seqs))) * 0.5
 
         # Iterate through the rows and columns of the star matrix
         for idx_row, row in enumerate(self.seqs):
@@ -195,8 +197,10 @@ class Align():
                     if star_matrix[idx_row, idx_col] == 0.5:
 
                         # Calculate score and assign to position and reverse position
-                        star_matrix[idx_row, idx_col] = self._seq_comparison(row, col)
-                        star_matrix[idx_col, idx_row] = star_matrix[idx_row, idx_col]
+                        star_matrix[idx_row, idx_col] = self._seq_comparison(
+                            row, col)
+                        star_matrix[idx_col,
+                                    idx_row] = star_matrix[idx_row, idx_col]
 
                 # Reassign diagonal score from 0.5 to 0
                 else:
@@ -222,15 +226,11 @@ class Align():
 
         return root_idx, max_idx
 
-
     @staticmethod
     def _matrix(a, b, match_score=1, gap_cost=2):
         """ gets matrix of alignment for smith waterman algorithm
-
             Args:
-
             Returns:
-
         """
 
         # H is the np array of scores
@@ -255,6 +255,38 @@ class Align():
 
         return H
 
+    # @staticmethod
+    # def _matrix(a, b, matrix=bl.BLOSUM(62), gap_cost=1):
+    #     """ gets matrix of alignment for smith waterman algorithm
+
+    #         Args:
+
+    #         Returns:
+
+    #     """
+
+    #     # H is the np array of scores
+    #     H = np.zeros((len(a) + 1, len(b) + 1), int)
+
+    #     # itertools makes nested for loop
+    #     for i, j in itertools.product(range(1, H.shape[0]), range(1, H.shape[1])):
+
+    #         # if a and b align at this spot, add the match score to the score from left diagonal
+    #         # if they don't, then subtract the match score from left diagonal
+    #         match = H[i - 1, j - 1] + \
+    #             (matrix[a[i - 1] + b[j - 1]])
+
+    #         # delete score, subtract from score immediately left
+    #         # delete = H[i - 1, j] - gap_cost
+
+    #         # insert score, subtract from score above
+    #         # insert = H[i, j - 1] - gap_cost
+            
+    #         # set the matrix equal to the highest val (min is 0)
+    #         H[i, j] = max(match, 0)
+
+    #     return H
+
     @staticmethod
     def _traceback(H, b, b_='', old_i=0):
         # flip H to get index of **last** occurrence of H.max() with np.argmax()
@@ -274,7 +306,9 @@ class Align():
             return b_, j
 
         #
-        b_ = b[j - 1] + '-' + b_ if old_i - i > 1 else b[j - 1] + b_
+        # print(old_i)
+        b_ = b[j - 1] + '*' + b[j] + b_ if old_i - i > 1 else b[j - 1] + b_
+        # print(b_)
 
         return Align._traceback(H[0:i, 0:j], b, b_, i)
 
@@ -287,18 +321,17 @@ class Align():
         b_, pos = Align._traceback(H, b)
         return pos, pos + len(b_)
 
-    def clustal(self, match_score=1, gap_cost=2):
-        # intialize alignment _matrix
-        aligned = []
+    # def clustal(self, match_score=1, gap_cost=1):
+    #     # intialize alignment _matrix
+    #     aligned = []
 
-        # find initial root sequence and closest matching sequence
-        a, b = self.seqs[self.get_root_seq()[0]], self.seqs[self.get_root_seq()[1]]
+    #     # find initial root sequence and closest matching sequence
+    #     a, b = self.seqs[self.get_root_seq(
+    #     )[0]], self.seqs[self.get_root_seq()[1]]
 
-        # smith-waterman
-        start, end = self._smith_waterman(a, b, match_score, gap_cost)
-        print(a[start:end])
+    #     # smith-waterman
+    #     start, end = self._smith_waterman(a, b, match_score, gap_cost)
+    #     print(a[start:end])
 
-        start_b, end_b = self._smith_waterman(b, a, match_score, gap_cost)
-        print(b[start_b:end_b])
-
-
+    #     start_b, end_b = self._smith_waterman(b, a, match_score, gap_cost)
+    #     print(b[start_b:end_b])

@@ -2,6 +2,7 @@ from re import A
 from EvoAlign import Align
 import itertools
 import numpy as np
+import blosum as bl
 
 dog = 'data_sources/P53_test_data/canis_lupus_familiaris.fasta'
 human = 'data_sources/P53_test_data/homo_sapiens.fasta'
@@ -19,13 +20,13 @@ align.read_fasta(all)
 
 # align.clustal()
 
-
 # prints correct scoring matrix from Wikipedia example
 # print(align._matrix('GGTTGACTA', 'TGTTACGG'))
 
-a, b = 'GGTTGACTA', 'TGTTACGG'
-H = align._matrix(a, b)
-print(align._traceback(H, b))
+# a, b = 'GGTTGACTA', 'TGTTACGG'
+# a, b = align.get_seqs()[0], align.get_seqs()[1]
+# H = align._matrix(a, b)
+# print(align._traceback(H, b)[0])
 
 # a, b = 'GGTTGACTA', 'TGTTACGG'
 # start, end = align._smith_waterman(a, b)
