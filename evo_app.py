@@ -11,7 +11,7 @@ all = 'data_sources/P53_test_data/all.fasta'
 fastas = [dog, human, all]
 
 align = Align()
-align.read_fasta(all)
+#align.read_fasta(all)
 
 #print(align.get_seqs())
 
@@ -23,10 +23,10 @@ align.read_fasta(all)
 # prints correct scoring matrix from Wikipedia example
 # print(align._matrix('GGTTGACTA', 'TGTTACGG'))
 
-# a, b = 'GGTTGACTA', 'TGTTACGG'
-# a, b = align.get_seqs()[0], align.get_seqs()[1]
-# H = align._matrix(a, b)
-# print(align._traceback(H, b)[0])
+a, b = 'GGTTGACTA', 'TGTTACGG'
+#a, b = align.get_seqs()[0], align.get_seqs()[1]
+H = align._matrix(a, b)
+print(align._traceback(H, b)[0])
 
 # a, b = 'GGTTGACTA', 'TGTTACGG'
 # start, end = align._smith_waterman(a, b)
