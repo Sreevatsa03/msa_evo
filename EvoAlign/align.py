@@ -159,14 +159,8 @@ class Align():
         # Iterates through each position in the alignment
         for pos in seq_array.T[::-1]:
             # 1 for a match and then -1 if mismatch
-            match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
+            score += sum([1 if x == y else -1 for i, x in enumerate(pos)
                                for j, y in enumerate(pos) if i > j])
-
-            # Subtracts 1 at each position if a gap is present
-            gap_score = sum([-1 if '*' in (x, y) else 0 for i, x in enumerate(pos)
-                             for j, y in enumerate(pos) if i > j])
-
-            score += match_score + gap_score
         return score
 
     def get_star_matrix(self):
