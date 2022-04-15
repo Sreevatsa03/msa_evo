@@ -75,6 +75,7 @@ class Align():
 
         return self.seqs
 
+    #FITNESS CRITERIA
     def sum_pairs_score(self, matrix=bl.BLOSUM(62), gap_cost=1):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
 
@@ -93,6 +94,7 @@ class Align():
                                for j, y in enumerate(pos) if i > j])
         return score
 
+    #Not for evo framework
     def count_gaps(self):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
 
@@ -113,6 +115,7 @@ class Align():
         # return score
         return gap_score
 
+    #Not for evo framework
     def count_matches(self):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
 
@@ -216,7 +219,7 @@ class Align():
 
         return root_idx, max_idx
 
-
+    # Agent
     @staticmethod
     def smith_waterman(seq1, seq2, insertion_penalty = -1, deletion_penalty = -1,
                     mismatch_penalty = -1, match_score = 2):

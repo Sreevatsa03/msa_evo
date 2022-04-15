@@ -31,6 +31,8 @@ a, b = align.get_seqs()[0], align.get_seqs()[1]
 
 a_align, b_align = align.align(a, b)
 
-print(align._seq_comparison(a, b))
-print(align._seq_comparison(a_align, b_align))
+#print(a_align, '\n', b_align)
+#print(align._seq_comparison(a, b))
+#print(align._seq_comparison(a_align, b_align))
 
+print(bl.BLOSUM(50))
