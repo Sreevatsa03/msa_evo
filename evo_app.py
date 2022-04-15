@@ -24,11 +24,13 @@ align.read_fasta(all)
 # print(align._matrix('GGTTGACTA', 'TGTTACGG'))
 
 # a, b = 'GGTTGACTA', 'TGTTACGG'
-# a, b = align.get_seqs()[0], align.get_seqs()[1]
+a, b = align.get_seqs()[0], align.get_seqs()[1]
 # H = align._matrix(a, b)
 # print(H)
 # print(align._traceback(H, b)[0])
 
-# a, b = 'GGTTGACTA', 'TGTTACGG'
-# start, end = align._smith_waterman(a, b)
-# print(a[start:end])  # GTTGAC
+a_align, b_align = align.align(a, b)
+
+print(align._seq_comparison(a, b))
+print(align._seq_comparison(a_align, b_align))
+
