@@ -1,8 +1,8 @@
-from re import A
+from re import A # is this a miscopy?
 from EvoAlign import align, evo
 import itertools
 import numpy as np
-
+import blosum as bl
 
 def blosum_62_score(current_alignment):
     """ Evaluates the alignment score for the current_alignment as a whole
@@ -15,19 +15,16 @@ def blosum_62_score(current_alignment):
     # Initialize score
     score = 0
 
+    # Get BLOSUM 62 Matrix
+    matrix = bl.BLOSUM(62)
+
     # Iterates through each position in the alignment
     for pos in current_alignment.T[::-1]:
-        # 1 for a match and then -1 if mismatch
-        match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
-                           for j, y in enumerate(pos) if i > j])
-
-        # Subtracts 1 at each position if a gap is present
-        gap_score = sum([-1 if '-' in (x, y) else 0 for i, x in enumerate(pos)
-                         for j, y in enumerate(pos) if i > j])
-
-        score += match_score + gap_score
-
+        # use substition matrix to score matches and mismatches
+        score += sum([matrix[x + y] for i, x in enumerate(pos)
+                      for j, y in enumerate(pos) if i > j])
     return score
+
 
 def main():
     # path to all.fasta data
