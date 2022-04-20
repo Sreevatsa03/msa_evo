@@ -53,6 +53,10 @@ def main():
 
     E1.evolve(5, dom=100, status=1)
 
+    print(E1.pop)
+    print(E1.fitness)
+    print(E1.agents)
+
 
 
 
