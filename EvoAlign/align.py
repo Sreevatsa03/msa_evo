@@ -236,7 +236,7 @@ class Align():
         See <http://en.wikipedia.org/wiki/Smith-Waterman_algorithm>.
 
         >>> for s in smith_waterman('AGCAGACT', 'ACACACTA'): print s
-        ... 
+        ...
         AGCAGACT-
         A-CACACTA
         """
@@ -283,6 +283,7 @@ class Align():
                     mismatch_penalty, match_score)
 
         return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
+
 
     # @staticmethod
     # def _matrix(a, b, match_score=1, gap_cost=2):

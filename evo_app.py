@@ -36,7 +36,7 @@ def smith_waterman(current_alignment, insertion_penalty = -1, deletion_penalty =
     np.random.shuffle(current_alignment)
 
     # Select 2 random sequences (first 2 because sequences were shuffled)
-    seq1, seq2 = current_alignment[0][0], current_alignment[1][0]
+    seq1, seq2 = current_alignment[0], current_alignment[1]
 
     m, n = len(seq1), len(seq2)
 
@@ -79,6 +79,7 @@ def smith_waterman(current_alignment, insertion_penalty = -1, deletion_penalty =
     return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
 
 
+
 def main():
     # path to all.fasta data
     all = 'data_sources/P53_test_data/all.fasta'
@@ -92,19 +93,21 @@ def main():
     # getter function to see seqs
     a = current_alignment.get_seqs()
 
-    #print(blosum_62_score(a))
-    print(smith_waterman(a))
+
 
     # create Evo environment
-    #E = evo.Evo()
+    E = evo.Evo()
 
     # register fitness criteria
-    #E.add_fitness_criteria('blosum_62_score', blosum_62_score)
+    E.add_fitness_criteria('blosum_62_score', blosum_62_score)
 
     # add modification agent
-    #E.add_agent('smith-waterman', align.smith_waterman)
+    E.add_agent('smith-waterman', smith_waterman)
 
     # add initial solution
+    L = [a]
+    E.add_solution(L)
+    print(E)
 
 
 
