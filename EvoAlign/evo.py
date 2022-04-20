@@ -40,6 +40,7 @@ class Evo:
         eval = tuple((name, f(sol)) for name, f in self.fitness.items())
         self.pop[eval] = sol
 
+
     def run_agent(self, name):
         """ Invoke an agent against the population """
         op, k = self.agents[name]

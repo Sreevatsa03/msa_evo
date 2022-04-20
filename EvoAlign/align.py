@@ -220,8 +220,7 @@ class Align():
         return root_idx, max_idx
 
     # Agent
-    @staticmethod
-    def smith_waterman(seq1, seq2, insertion_penalty = -1, deletion_penalty = -1,
+    def smith_waterman(self, insertion_penalty = -1, deletion_penalty = -1,
                     mismatch_penalty = -1, match_score = 2):
         """
         Find the optimum local sequence alignment for the sequences `seq1`
@@ -235,11 +234,12 @@ class Align():
 
         See <http://en.wikipedia.org/wiki/Smith-Waterman_algorithm>.
 
-        >>> for s in smith_waterman('AGCAGACT', 'ACACACTA'): print s
+        #>>> for s in smith_waterman('AGCAGACT', 'ACACACTA'): print s
         ...
         AGCAGACT-
         A-CACACTA
         """
+        seq1, seq2 = self.seqs[0], self.seqs[1]
         m, n = len(seq1), len(seq2)
 
         # Construct the similarity matrix in p[i][j], and remember how
@@ -276,13 +276,18 @@ class Align():
                 else:
                     assert(False)
 
-        return [''.join(reversed(s)) for s in zip(*backtrack())]
+        seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
 
-    def align(self, seq1, seq2, insertion_penalty = -1, deletion_penalty = -1, mismatch_penalty = -1, match_score = 2):
+        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
+
+        """return [''.join(reversed(s)) for s in zip(*backtrack())]
+
+    def sw(self, seq1, seq2, insertion_penalty = -1, deletion_penalty = -1, mismatch_penalty = -1, match_score = 2):
         seq1_aligned, seq2_aligned = self.smith_waterman(seq1, seq2, insertion_penalty, deletion_penalty,
                     mismatch_penalty, match_score)
 
-        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
+        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))"""
+
 
 
     # @staticmethod
