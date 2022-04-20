@@ -15,7 +15,7 @@ fastas = [dog, human, all]
 alignment = align.Align()
 alignment.read_fasta(all)
 
-#print(alignment.get_seqs())
+a = alignment.get_seqs()
 
 #print(alignment.sum_pairs_score())
 #print(alignment.get_root_seq())
@@ -26,7 +26,7 @@ alignment.read_fasta(all)
 # prints correct scoring matrix from Wikipedia example
 # print(alignment._matrix('GGTTGACTA', 'TGTTACGG'))
 
-print(alignment.smith_waterman())
+print('align', alignment.smith_waterman())
 
 
 # a, b = 'GGTTGACTA', 'TGTTACGG'
