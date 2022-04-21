@@ -119,7 +119,7 @@ class MonkeyAlign():
             # use substition matrix to score matches and mismatches
             score += sum([matrix[x + y] for i, x in enumerate(pos)
                           for j, y in enumerate(pos) if i > j])
-        return score
+        return score * -1
 
     # Modification Agent, aligns two random seqs, returns entire alignment
     def smith_waterman(self, insertion_penalty=-1, deletion_penalty=-1,
