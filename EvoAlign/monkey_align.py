@@ -229,25 +229,3 @@ class MonkeyAlign():
 
     def __repr__(self):
         return str(self.seqs)
-
-
-
-
-
-
-
-
-
-def main():
-
-    ma = MonkeyAlign()
-    ma.load_str('ABC', 'ABD', 'ABCD', 'BD')
-    print(ma)
-    #print(ma._two_rand_seqs())
-    print(ma.sum_pairs_score())
-    print(ma.smith_waterman())
-    print(ma.sum_pairs_score())
-
-
-if __name__ == '__main__':
-    main()

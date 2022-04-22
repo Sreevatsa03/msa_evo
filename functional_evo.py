@@ -2,7 +2,7 @@
 getter functions for agents in Evo
 """
 
-from EvoAlign import align, evo, monkey_align
+from EvoAlign import Align, Evo, MonkeyAlign
 import itertools
 import numpy as np
 import blosum as bl
@@ -34,7 +34,7 @@ def main():
     all = 'data_sources/P53_test_data/all.fasta'
 
     # create instance of Align
-    initial_object = monkey_align.MonkeyAlign()
+    initial_object = MonkeyAlign()
 
     # read fasta into Align
     initial_object.read_fasta(all)
@@ -43,7 +43,7 @@ def main():
     #ma.load_str('ABCF', 'ABDEH', 'ABCD', 'BD', 'AB')
 
     # create Evo environment
-    E1 = evo.Evo()
+    E1 = Evo()
 
     # register fitness criteria
     E1.add_fitness_criteria('blosum_62_score', blosum_62_score)
