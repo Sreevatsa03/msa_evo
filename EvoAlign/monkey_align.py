@@ -9,7 +9,6 @@ import copy
 import blosum as bl
 
 DELETION, INSERTION, MATCH = range(3)
-
 BLOSUM_MATRICES = {45: bl.BLOSUM(45), 50: bl.BLOSUM(50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90)}
 
 class MonkeyAlign():

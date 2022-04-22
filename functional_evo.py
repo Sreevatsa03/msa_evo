@@ -20,7 +20,7 @@ def smith_waterman_align(curr_align):
     Returns:
 
     """
-    # assert?
+    # ASSERT HERE?
     curr_align = curr_align[0]
     return curr_align.smith_waterman()
 
@@ -44,7 +44,8 @@ def count_gaps(curr_align):
 
 def main():
     # path to all.fasta data
-    all = 'data_sources/P53_test_data/dash.fasta'
+    #all = 'data_sources/P53_test_data/dash.fasta'
+    all = 'data_sources/P53_test_data/all.fasta'
 
     # create instance of Align
     initial_object = MonkeyAlign()
