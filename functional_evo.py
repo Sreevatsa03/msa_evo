@@ -70,7 +70,7 @@ def main():
     # add initial solution
     E1.add_solution(initial_object)
 
-    E1.evolve(10, dom=100, status=3)
+    E1.evolve(100, dom=100, status=10)
 
     print(E1.pop)
 

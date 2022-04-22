@@ -173,11 +173,9 @@ class Evo:
 
         # Creates the scatter plot and shows it
         ax.scatter(x, y, z)
-        plt.show()
         plt.savefig("3D_scatter.png")
 
         # plot pairplot
         df = pd.read_csv('solutions.csv')
         sns.pairplot(data=df)
-        plt.show()
         plt.savefig('pairplot.png')
