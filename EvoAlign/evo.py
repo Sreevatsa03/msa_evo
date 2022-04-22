@@ -8,6 +8,9 @@ import pickle
 import random as rnd
 import copy
 from functools import reduce
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class Evo:
@@ -16,7 +19,8 @@ class Evo:
         """ Population constructor """
         self.pop = {}  # The solution population eval -> solution
         self.fitness = {}  # Registered fitness functions: name -> objective function
-        self.agents = {}  # Registered agents:  name -> (operator, num_solutions_input)
+        # Registered agents:  name -> (operator, num_solutions_input)
+        self.agents = {}
 
     def size(self):
         """ The size of the current population """
@@ -39,7 +43,6 @@ class Evo:
         # eval = ((obj1, score1), (obj2, score2).....)
         eval = tuple((name, f(sol)) for name, f in self.fitness.items())
         self.pop[eval] = sol
-
 
     def run_agent(self, name):
         """ Invoke an agent against the population """
@@ -103,7 +106,7 @@ class Evo:
         score_diffs = list(map(lambda x, y: y - x, pscores, qscores))
         min_diff = min(score_diffs)
         max_diff = max(score_diffs)
-        return min_diff >= 0.0 and max_diff > 0.0
+        return min_diff <= 0.0 and max_diff < 0.0
 
     @staticmethod
     def _reduce_nds(S, p):
@@ -120,3 +123,59 @@ class Evo:
         for eval, sol in self.pop.items():
             rslt += str(dict(eval)) + ":\t" + str(sol) + "\n"
         return rslt
+
+    def _data_to_dict(self):
+        """ Convert fitness criteria and solutions to dict """
+
+        # Gets a list of solutions and fitness criteria
+        solutions = list(self.pop.keys())
+        fitness = list(self.fitness.keys())
+
+        # Creates a dictionary where key is criteria and value is score list
+        return {key: [[fit[1] for fit in val if fit[0] == key][0]
+                      for val in solutions]
+                for key in fitness}
+
+    def save_solutions(self):
+        """ Save the solutions in the population in a csv file """
+
+        output_dict = self._data_to_dict()
+
+        df = pd.DataFrame(output_dict)
+        df.to_csv('solutions.csv')
+
+    def visualize(self, axes=(0, 1, 2)):
+        """ Create two visualizations to show the tradeoffs between agents: 3D scatterplot and pairplot """
+
+        # plot 3D scatterplot and pairplot
+        sns.set(style="darkgrid")
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Sets the axes based on user preference or default and makes dict
+        fit = list(self.fitness.keys())
+        axes = [fit.index(num) if num in fit else num for num in axes]
+        dims_dict = self._data_to_dict()
+
+        # Sets the labels for the scatter plot
+        ax.set_xlabel(f'{fit[axes[0]]}')
+        ax.set_ylabel(f'{fit[axes[1]]}')
+        ax.set_zlabel(f'{fit[axes[2]]}')
+
+        # Sets the dimensions for the scatter plot
+        x = dims_dict[fit[axes[0]]]
+        y = dims_dict[fit[axes[1]]]
+        z = dims_dict[fit[axes[2]]]
+
+        # Sets the title for the scatter plot
+        plt.title(f'{fit[axes[0]]} vs {fit[axes[1]]} vs {fit[axes[2]]}')
+
+        # Creates the scatter plot and shows it
+        ax.scatter(x, y, z)
+        plt.savefig("3D_scatter.png")
+
+        # plot pairplot
+        df = pd.read_csv('solutions.csv')
+        sns.pairplot(data=df)
+        plt.savefig('pairplot.png')

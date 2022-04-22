@@ -13,7 +13,7 @@ class Chart():
     def alignment_chart(self, filename=None):
         app = Dash()
 
-        # fasta = urlreq.urlopen('https://git.io/alignment_viewer_p53.fasta').read().decode('utf-8')
+        fasta = urlreq.urlopen('https://git.io/alignment_viewer_p53.fasta').read().decode('utf-8')
 
         with open(filename, 'r', encoding='utf-8') as fasta:
             app.layout = html.Div([
@@ -24,3 +24,5 @@ class Chart():
             ])
 
         app.run_server()
+
+

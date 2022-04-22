@@ -1,3 +1,6 @@
+"""
+Currently meant to be a future replacement of Align class
+"""
 from Bio import SeqIO
 import numpy as np
 from collections import Counter
@@ -7,6 +10,7 @@ import blosum as bl
 
 DELETION, INSERTION, MATCH = range(3)
 
+BLOSUM_MATRICES = {45: bl.BLOSUM(45), 50: bl.BLOSUM(50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90)}
 
 class MonkeyAlign():
 
@@ -15,7 +19,6 @@ class MonkeyAlign():
         # Numpy array of character arrays (with trailing gaps)
         self.seqs = []
 
-    # this calls read_fasta
     def _read_fasta(self, files):
         """ Read in fasta file(s)
 
@@ -66,19 +69,41 @@ class MonkeyAlign():
         # convert list of arrays to 2D ndarray
         self.seqs = np.array(self.seqs)
 
+    def count_gaps(self):
+        """ Calculates the sum of pairs for matches, mismatches, and gaps
+
+            Return:
+                score (int): sum of pairs score for the fasta array
+        """
+
+        # Initialize score
+        gap_score = 0
+
+        # Iterates through each position in the alignment
+        for pos in self.seqs.T:
+
+            # Subtracts 1 at each position if a gap is present
+            gap_score = sum([-1 if ('*' in (x, y) and len({x, y}) > 1) else 0 
+                             for i, x in enumerate(pos)
+                             for j, y in enumerate(pos) if i > j])
+
+        # return score
+        return gap_score
+
     def load_str(self, *str_seq):
         """ Allows user to input sequences as string
 
         Args:
-            str_seq:
+            str_seq (str): *args as many strings as the user wants
 
         Returns:
 
         """
+        # set self.seqs to a list of np.arrays
         self.seqs = [np.array([char for char in current_str],
                                        dtype='<U1') for current_str in str_seq]
 
-        # add trailing sequences
+        # add trailing sequences so they match lengths
         self._add_trailing()
 
         # convert list of arrays to 2D ndarray
@@ -96,9 +121,12 @@ class MonkeyAlign():
 
         return self.seqs
 
-    # FITNESS CRITERIA
-    def sum_pairs_score(self, matrix=bl.BLOSUM(62), gap_cost=1):
-        """ Calculates the sum of pairs for matches, mismatches, and gaps
+    # FITNESS CRITERIA for entire matrix
+    def sum_pairs_score(self, matrix=bl.BLOSUM(62)):
+        """ Calculates score across all columns for matches, mismatches, and gaps
+
+            Args:
+                matrix (bl.BLOSUM matrix): BLOSUM matrix as eval system
 
             Return:
                 score (int): sum of pairs score for the fasta array
@@ -114,7 +142,7 @@ class MonkeyAlign():
                           for j, y in enumerate(pos) if i > j])
         return score
 
-    # Agent
+    # Modification Agent, aligns two random seqs, returns entire alignment
     def smith_waterman(self, insertion_penalty=-1, deletion_penalty=-1,
                        mismatch_penalty=-1, match_score=2):
         """
@@ -134,15 +162,12 @@ class MonkeyAlign():
         AGCAGACT-
         A-CACACTA
         """
+        # get target variables from _two_rand_seqs() method
+        # static_lst is a list of np arrays of all the other alignments
+        seq1, seq2, static_lst = self._two_rand_seqs()
 
-        # lst_static_remainders is a list of np arrays of all the other alignments
-        seq1, seq2, lst_static_remainders = self._two_rand_seqs()
-
-
-
-
+        # get the lengths
         m, n = len(seq1), len(seq2)
-
 
         # Construct the similarity matrix in p[i][j], and remember how
         # we constructed it -- insertion, deletion or (mis)match -- in
@@ -164,9 +189,9 @@ class MonkeyAlign():
         def backtrack():
 
             i, j = m, n
-
+            # CHANGED HERE FROM 'OR' TO 'AND'
             while i > 0 and j > 0:
-
+                # IS THIS REDUNDANT?
                 assert i >= 0 and j >= 0
                 if q[i][j] == MATCH:
                     i -= 1
@@ -181,19 +206,50 @@ class MonkeyAlign():
                 else:
                     assert (False)
 
+        # TRY TO SHORTEN CODE HERE
         seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
 
+        # from string to character array - MAKE FUNCTIONAL
         seq1_aligned = np.array([char for char in seq1_aligned])
         seq2_aligned = np.array([char for char in seq2_aligned])
 
-        self._combine_again(seq1_aligned, seq2_aligned, static_lst=lst_static_remainders)
+        # call _combine_again method to convert to full alignment
+        self._combine_again(seq1_aligned, seq2_aligned, static_lst=static_lst)
+
+        # return self
         return self
 
+    @staticmethod
+    def _seq_comparison(a, b, matrix=bl.BLOSUM(62)):
+        """ Calculates the comparison score of the inputted sequences
 
-    def _two_rand_seqs(self):
+            Args:
+                a (np.array): first sequence
+                b (np.array): second sequence
+
+            Return:
+                score (int): comparison score for inputted sequences
         """
 
+        seq_array = np.array([a, b])
+
+        # Initialize score
+        score = 0
+
+        # Iterates through each position in the alignment
+        for pos in seq_array.T[::-1]:
+            # 1 for a match and then -1 if mismatch
+            score += sum([matrix[x + y] for i, x in enumerate(pos)
+                               for j, y in enumerate(pos) if i > j])
+        return score
+
+    def _two_rand_seqs(self):
+        """ finds two random sequences to align, saves the other sequences as a list of np.arrays
+
         Returns:
+            seq1
+            seq2
+            static_lst
 
         """
         # Shuffle the current alignment
@@ -204,13 +260,12 @@ class MonkeyAlign():
 
     def _combine_again(self, seq1, seq2, static_lst):
         """ self.seqs is now the 2 new alignments and the static remainders, adjusted for new length
-
-        Returns:
-
         """
+        # first we place them all in the same list
         static_lst.append(seq1)
         static_lst.append(seq2)
 
+        # set list to self.seqs
         self.seqs = static_lst
 
         # add trailing sequences
@@ -221,34 +276,3 @@ class MonkeyAlign():
 
     def __repr__(self):
         return str(self.seqs)
-
-
-
-
-
-
-
-
-
-def main():
-
-    """d= np.array([['M', 'Q', 'E', 'P', 'Q', 'S' ], ['M', 'Q', 'E', 'P', 'Q', 'S' ]])
-    print(d)
-    e = np.array([['R', 'Q', 'E', 'P', 'Q', 'S' ], ['M', 'Q', 'E', 'P', 'Q', 'S' ]])
-    l = np.array([d,e])
-    assert l.size % 2 == 0
-    num = int(l.size/4)
-    print(num)
-    print(l.reshape(4,num))"""
-
-    ma = MonkeyAlign()
-    ma.load_str('ABC', 'ABD', 'ABCD', 'BD')
-    print(ma)
-    #print(ma._two_rand_seqs())
-    print(ma.sum_pairs_score())
-    print(ma.smith_waterman())
-    print(ma.sum_pairs_score())
-
-
-if __name__ == '__main__':
-    main()
