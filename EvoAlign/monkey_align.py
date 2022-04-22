@@ -10,6 +10,7 @@ import blosum as bl
 
 DELETION, INSERTION, MATCH = range(3)
 
+BLOSUM_MATRICES = {45: bl.BLOSUM(45), 50: bl.BLOSUM(50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90)}
 
 class MonkeyAlign():
 
@@ -18,7 +19,6 @@ class MonkeyAlign():
         # Numpy array of character arrays (with trailing gaps)
         self.seqs = []
 
-    # this calls read_fasta
     def _read_fasta(self, files):
         """ Read in fasta file(s)
 
@@ -69,6 +69,27 @@ class MonkeyAlign():
         # convert list of arrays to 2D ndarray
         self.seqs = np.array(self.seqs)
 
+    def count_gaps(self):
+        """ Calculates the sum of pairs for matches, mismatches, and gaps
+
+            Return:
+                score (int): sum of pairs score for the fasta array
+        """
+
+        # Initialize score
+        gap_score = 0
+
+        # Iterates through each position in the alignment
+        for pos in self.seqs.T:
+
+            # Subtracts 1 at each position if a gap is present
+            gap_score = sum([-1 if ('*' in (x, y) and len({x, y}) > 1) else 0 
+                             for i, x in enumerate(pos)
+                             for j, y in enumerate(pos) if i > j])
+
+        # return score
+        return gap_score
+
     def load_str(self, *str_seq):
         """ Allows user to input sequences as string
 
@@ -101,7 +122,7 @@ class MonkeyAlign():
         return self.seqs
 
     # FITNESS CRITERIA for entire matrix
-    def sum_pairs_score(self, matrix=bl.BLOSUM(62), gap_cost=1):
+    def sum_pairs_score(self, matrix=bl.BLOSUM(62)):
         """ Calculates score across all columns for matches, mismatches, and gaps
 
             Args:
@@ -119,7 +140,7 @@ class MonkeyAlign():
             # use substition matrix to score matches and mismatches
             score += sum([matrix[x + y] for i, x in enumerate(pos)
                           for j, y in enumerate(pos) if i > j])
-        return score * -1
+        return score
 
     # Modification Agent, aligns two random seqs, returns entire alignment
     def smith_waterman(self, insertion_penalty=-1, deletion_penalty=-1,
@@ -187,14 +208,40 @@ class MonkeyAlign():
 
         # TRY TO SHORTEN CODE HERE
         seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
-        # from string to character array
+
+        # from string to character array - MAKE FUNCTIONAL
         seq1_aligned = np.array([char for char in seq1_aligned])
         seq2_aligned = np.array([char for char in seq2_aligned])
 
         # call _combine_again method to convert to full alignment
         self._combine_again(seq1_aligned, seq2_aligned, static_lst=static_lst)
+
+        # return self
         return self
 
+    @staticmethod
+    def _seq_comparison(a, b, matrix=bl.BLOSUM(62)):
+        """ Calculates the comparison score of the inputted sequences
+
+            Args:
+                a (np.array): first sequence
+                b (np.array): second sequence
+
+            Return:
+                score (int): comparison score for inputted sequences
+        """
+
+        seq_array = np.array([a, b])
+
+        # Initialize score
+        score = 0
+
+        # Iterates through each position in the alignment
+        for pos in seq_array.T[::-1]:
+            # 1 for a match and then -1 if mismatch
+            score += sum([matrix[x + y] for i, x in enumerate(pos)
+                               for j, y in enumerate(pos) if i > j])
+        return score
 
     def _two_rand_seqs(self):
         """ finds two random sequences to align, saves the other sequences as a list of np.arrays

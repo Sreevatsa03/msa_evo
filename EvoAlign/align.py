@@ -76,7 +76,7 @@ class Align():
         return self.seqs
 
     #FITNESS CRITERIA
-    def sum_pairs_score(self, matrix=bl.BLOSUM(62), gap_cost=1):
+    def sum_pairs_score(self, matrix=bl.BLOSUM(62)):
         """ Calculates the sum of pairs for matches, mismatches, and gaps
 
             Return:
@@ -220,7 +220,7 @@ class Align():
         return root_idx, max_idx
 
     # Agent
-    def smith_waterman(self, insertion_penalty = -1, deletion_penalty = -1,
+    def smith_waterman(self, seq1, seq2, insertion_penalty = -1, deletion_penalty = -1,
                     mismatch_penalty = -1, match_score = 2):
         """
         Find the optimum local sequence alignment for the sequences `seq1`
@@ -239,7 +239,6 @@ class Align():
         AGCAGACT-
         A-CACACTA
         """
-        seq1, seq2 = self.seqs[0], self.seqs[1]
         m, n = len(seq1), len(seq2)
 
         # Construct the similarity matrix in p[i][j], and remember how
@@ -276,111 +275,15 @@ class Align():
                 else:
                     assert(False)
 
-        seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
+        # seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
 
-        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
+        # return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
 
-        """return [''.join(reversed(s)) for s in zip(*backtrack())]
+        return [''.join(reversed(s)) for s in zip(*backtrack())]
 
     def sw(self, seq1, seq2, insertion_penalty = -1, deletion_penalty = -1, mismatch_penalty = -1, match_score = 2):
         seq1_aligned, seq2_aligned = self.smith_waterman(seq1, seq2, insertion_penalty, deletion_penalty,
                     mismatch_penalty, match_score)
 
-        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))"""
+        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
 
-
-
-    # @staticmethod
-    # def _matrix(a, b, match_score=1, gap_cost=2):
-    #     """ gets matrix of alignment for smith waterman algorithm
-    #         Args:
-    #         Returns:
-    #     """
-
-    #     # H is the np array of scores
-    #     H = np.zeros((len(a) + 1, len(b) + 1), int)
-
-    #     # itertools makes nested for loop
-    #     for i, j in itertools.product(range(1, H.shape[0]), range(1, H.shape[1])):
-
-    #         # if a and b align at this spot, add the match score to the score from left diagonal
-    #         # if they don't, then subtract the match score from left diagonal
-    #         match = H[i - 1, j - 1] + \
-    #             (match_score if a[i - 1] == b[j - 1] else - match_score)
-
-    #         # delete score, subtract from score immediately left
-    #         delete = H[i - 1, j] - gap_cost
-
-    #         # insert score, subtract from score above
-    #         insert = H[i, j - 1] - gap_cost
-
-    #         # set the matrix equal to the highest val (min is 0)
-    #         H[i, j] = max(match, delete, insert, 0)
-
-    #     return H
-
-    # @staticmethod
-    # def _matrix(a, b, matrix=bl.BLOSUM(62), gap_cost=1):
-    #     """ gets matrix of alignment for smith waterman algorithm
-
-    #         Args:
-
-    #         Returns:
-
-    #     """
-
-    #     # H is the np array of scores
-    #     H = np.zeros((len(a) + 1, len(b) + 1), int)
-
-    #     # itertools makes nested for loop
-    #     for i, j in itertools.product(range(1, H.shape[0]), range(1, H.shape[1])):
-
-    #         # if a and b align at this spot, add the match score to the score from left diagonal
-    #         # if they don't, then subtract the match score from left diagonal
-    #         match = H[i - 1, j - 1] + \
-    #             (matrix[a[i - 1] + b[j - 1]])
-
-    #         # delete score, subtract from score immediately left
-    #         # delete = H[i - 1, j] - gap_cost
-
-    #         # insert score, subtract from score above
-    #         # insert = H[i, j - 1] - gap_cost
-            
-    #         # set the matrix equal to the highest val (min is 0)
-    #         H[i, j] = max(match, 0)
-
-    #     return H
-
-    # @staticmethod
-    # def _traceback(H, b, b_='', old_i=0):
-    #     # flip H to get index of **last** occurrence of H.max() with np.argmax()
-    #     # 2 np flips (0 then 1) https://numpy.org/doc/stable/reference/generated/numpy.flip.html
-    #     # maintains individual row order, but row positions are reversed (top row as bottom row, etc.)
-    #     H_flip = np.flip(np.flip(H, 0), 1)
-
-    #     # iterates through matrix to find the the location (i_, j_) of the max val
-    #     i_, j_ = np.unravel_index(H_flip.argmax(), H_flip.shape)
-
-    #     # convert i_, j_ from H_flip back into i,j from H
-    #     # (i, j) are **last** indexes of H.max()
-    #     i, j = np.subtract(H.shape, (i_ + 1, j_ + 1))
-
-    #     # if the max val is zero, return empty string and j
-    #     if H[i, j] == 0:
-    #         return b_, j
-
-    #     #
-    #     # print(old_i)
-    #     b_ = b[j - 1] + '*' + b[j] + b_ if old_i - i > 1 else b[j - 1] + b_
-    #     # print(b_)
-
-    #     return Align._traceback(H[0:i, 0:j], b, b_, i)
-
-    # @staticmethod
-    # def _smith_waterman(a, b, match_score=1, gap_cost=2):
-    #     """
-
-    #     """
-    #     H = Align._matrix(a, b, match_score, gap_cost)
-    #     b_, pos = Align._traceback(H, b)
-    #     return pos, pos + len(b_)
