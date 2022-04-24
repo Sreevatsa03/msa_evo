@@ -7,6 +7,7 @@ from collections import Counter
 import itertools
 import copy
 import blosum as bl
+import random as rnd
 
 DELETION, INSERTION, MATCH = range(3)
 BLOSUM_MATRICES = {45: bl.BLOSUM(45), 50: bl.BLOSUM(50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90)}
@@ -17,6 +18,7 @@ class MonkeyAlign():
 
         # Numpy array of character arrays (with trailing gaps)
         self.seqs = []
+        self.num_seqs = 0
 
     def _read_fasta(self, files):
         """ Read in fasta file(s)
@@ -43,7 +45,34 @@ class MonkeyAlign():
         # convert sequence strings to numpy character arrays
         self.seqs = list(map(np.array, self.seqs))
 
+        # update number of seqs
+        self.num_seqs = len(self.seqs)
+
         # return seqs
+        return self.seqs
+
+    def load_str(self, *str_seq):
+        """ Allows user to input sequences as string
+
+        Args:
+            str_seq (str): *args as many strings as the user wants
+
+        Returns:
+
+        """
+        # set self.seqs to a list of np.arrays
+        self.seqs = [np.array([char for char in current_str],
+                                       dtype='<U1') for current_str in str_seq]
+
+        # update number of seqs
+        self.num_seqs = len(self.seqs)
+
+        # add trailing sequences so they match lengths
+        self._add_trailing()
+
+        # convert list of arrays to 2D ndarray
+        self.seqs = np.array(self.seqs, dtype='<U1')
+
         return self.seqs
 
     def _add_trailing(self):
@@ -68,48 +97,41 @@ class MonkeyAlign():
         # convert list of arrays to 2D ndarray
         self.seqs = np.array(self.seqs)
 
-    def count_gaps(self):
-        """ Calculates the sum of pairs for matches, mismatches, and gaps
+
+    # FITNESS CRITERIA
+    def match_count(self):
+        """ Calculates the number of matches
 
             Return:
                 score (int): sum of pairs score for the fasta array
         """
 
         # Initialize score
-        gap_score = 0
+        match_score = 0
 
         # Iterates through each position in the alignment
         for pos in self.seqs.T:
 
             # Subtracts 1 at each position if a gap is present
-            gap_score = sum([-1 if ('*' in (x, y) and len({x, y}) > 1) else 0 
+            match_score += sum([1 if (x == y and x != '*') else 0
                              for i, x in enumerate(pos)
                              for j, y in enumerate(pos) if i > j])
 
         # return score
-        return gap_score
+        return match_score
 
-    def load_str(self, *str_seq):
-        """ Allows user to input sequences as string
-
-        Args:
-            str_seq (str): *args as many strings as the user wants
+    """# assists a fitness criteria
+    def _split_align(self):
+        ''' splits the alignment into first and second half to run sum pairs score
+        we want to get the seq
 
         Returns:
 
-        """
-        # set self.seqs to a list of np.arrays
-        self.seqs = [np.array([char for char in current_str],
-                                       dtype='<U1') for current_str in str_seq]
-
-        # add trailing sequences so they match lengths
-        self._add_trailing()
-
-        # convert list of arrays to 2D ndarray
-        self.seqs = np.array(self.seqs, dtype='<U1')
-
-        return self.seqs
-
+        '''
+        first_half = self.seqs[:int(0.5*len(self.seqs))]
+        second_half = self.seqs[int(0.5*len(self.seqs)):]
+        
+        return first_half, second_half"""
 
     def get_seqs(self):
         """ Retrieve array of sequences
@@ -273,5 +295,44 @@ class MonkeyAlign():
         # convert list of arrays to 2D ndarray
         self.seqs = np.array(self.seqs, dtype='<U1')
 
+        # modification agent
+
+    @staticmethod
+    def _get_begin_trail(seq):
+        """ gets you the index of the last character before trailing seqs begin"""
+
+        for i in range(len(seq)-1, -1, -1):
+            if seq[i] != '*':
+                return i
+        # just in case that the if statement is never true
+        return len(seq)-1
+
+    def move_end_gap(self):
+        """ Take a trailing sequence and randomly insert it for one sequence """
+
+        # get the index for a random sequence
+        rand_seq_idx = rnd.randint(0, self.num_seqs - 1)
+
+        # if there is at least one gap at the end
+        if self.seqs[rand_seq_idx][-1] == '*':
+            # pick a random index for the position, not including the other trailing gaps
+            rand_pos_idx = rnd.randint(0, MonkeyAlign._get_begin_trail(self.seqs[rand_seq_idx]))
+
+            # must use temp_storage because we are changing the length
+            temp = self.seqs[rand_seq_idx][:-1]
+
+            temp = np.insert(temp, rand_pos_idx, '*')
+
+            # reset the seq to the new one
+            self.seqs[rand_seq_idx] = temp
+
+            # must return a MonkeyAlign object
+            return self
+
+        # if no trailing gaps
+        else:
+            return self
+
     def __repr__(self):
         return str(self.seqs)
+
