@@ -327,6 +327,14 @@ class MonkeyAlign():
         else:
             return self
 
+    def convert_to_str(self):
+        """ will return a string version of the alignment
+        returns a list of strings """
+
+        return [''.join(self.seqs[i]) for i in range(self.num_seqs)]
+
+
+
     def __repr__(self):
         return str(self.seqs)
 

@@ -110,6 +110,7 @@ def main():
     # initial_object._split_seqs(initial_object.seqs[0], initial_object.seqs[1], 0.25)
     initial_object.smith_waterman(0.5)
 
+
     # create Evo environment
     E1 = Evo()
 
@@ -130,10 +131,11 @@ def main():
     # add initial solution
     E1.add_solution(initial_object)
 
-    E1.evolve(1000, dom=1000, status=100)
+    E1.evolve(10, dom=1000, status=100)
 
-    E1.save_solutions()
-    E1.visualize()
+    E1._get_str_alignment()
+    #E1.save_solutions()
+    #E1.visualize()
 
 
 if __name__ == '__main__':

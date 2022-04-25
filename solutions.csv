@@ -1,6 +1,4 @@
-,blosum_62_score,hydropathy_score,volume_score
-0,1697,-1906,-34558
-1,1756,-1913,-33971
-2,2011,-1629,-36137
-3,1999,-1629,-36099
-4,2035,-1631,-35662
+,blosum_62_score,hydropathy_score,volume_score,alignment
+0,726,-2591,-41744,"[['M' 'T' 'A' ... '*' '*' '*']
+ ['M' 'E' 'E' ... 'D' 'S' 'D']
+ ['M' 'Q' 'E' ... '*' '*' '*']]"

@@ -129,12 +129,29 @@ class Evo:
 
         # Gets a list of solutions and fitness criteria
         solutions = list(self.pop.keys())
+
+
+
         fitness = list(self.fitness.keys())
 
         # Creates a dictionary where key is criteria and value is score list
-        return {key: [[fit[1] for fit in val if fit[0] == key][0]
+
+        alignment_dict = {key: [[fit[1] for fit in val if fit[0] == key][0]
                       for val in solutions]
                 for key in fitness}
+
+
+        return alignment_dict
+
+    # sree and john pls ignore this and do not delete for now
+    def _get_str_alignment(self):
+        alignment_options = list(self.pop.values())
+        for alignment in alignment_options:
+            print()
+            str_list = alignment.convert_to_str()
+            for seq in str_list:
+                print(seq)
+
 
     def save_solutions(self):
         """ Save the solutions in the population in a csv file """
@@ -142,6 +159,8 @@ class Evo:
         output_dict = self._data_to_dict()
 
         df = pd.DataFrame(output_dict)
+
+
         df.to_csv('solutions.csv')
 
     def visualize(self, axes=(0, 1, 2)):
