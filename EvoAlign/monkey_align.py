@@ -4,10 +4,9 @@ Currently meant to be a future replacement of Align class
 from Bio import SeqIO
 import numpy as np
 from collections import Counter
-import itertools
-import copy
 import blosum as bl
 import random as rnd
+from math import ceil, floor
 
 DELETION, INSERTION, MATCH = range(3)
 BLOSUM_MATRICES = {45: bl.BLOSUM(45), 50: bl.BLOSUM(50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90)}
@@ -161,10 +160,17 @@ class MonkeyAlign():
             # use substition matrix to score matches and mismatches
             score += sum([matrix[x + y] for i, x in enumerate(pos)
                           for j, y in enumerate(pos) if i > j])
-        return score
+        return round(score)
+
+    @staticmethod
+    def _split_seqs(seq1, seq2, mod_len):
+        max_idx = floor(len(seq1) - (mod_len * len(seq1)))
+        start = rnd.choice(range(max_idx + 1))
+        end = floor(start + (mod_len * len(seq1)))
+        return seq1[start:end], seq2[start:end], start, end
 
     # Modification Agent, aligns two random seqs, returns entire alignment
-    def smith_waterman(self, insertion_penalty=-1, deletion_penalty=-1,
+    def smith_waterman(self, mod_len, insertion_penalty=-1, deletion_penalty=-1,
                        mismatch_penalty=-1, match_score=2):
         """
         Find the optimum local sequence alignment for the sequences `seq1`
@@ -185,7 +191,10 @@ class MonkeyAlign():
         """
         # get target variables from _two_rand_seqs() method
         # static_lst is a list of np arrays of all the other alignments
-        seq1, seq2, static_lst = self._two_rand_seqs()
+        full_seq1, full_seq2, static_lst = self._two_rand_seqs()
+
+        # extract part of seqs to be modified
+        seq1, seq2, start, end = self._split_seqs(full_seq1, full_seq2, mod_len)
 
         # get the lengths
         m, n = len(seq1), len(seq2)
@@ -230,9 +239,8 @@ class MonkeyAlign():
         # TRY TO SHORTEN CODE HERE
         seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
 
-        # from string to character array - MAKE FUNCTIONAL
-        seq1_aligned = np.array([char for char in seq1_aligned])
-        seq2_aligned = np.array([char for char in seq2_aligned])
+        seq1_aligned = np.concatenate((full_seq1[:start], np.array(list(seq1_aligned)), full_seq1[end:]))
+        seq2_aligned = np.concatenate((full_seq2[:start], np.array(list(seq2_aligned)), full_seq2[end:]))
 
         # call _combine_again method to convert to full alignment
         self._combine_again(seq1_aligned, seq2_aligned, static_lst=static_lst)
@@ -294,8 +302,6 @@ class MonkeyAlign():
 
         # convert list of arrays to 2D ndarray
         self.seqs = np.array(self.seqs, dtype='<U1')
-
-        # modification agent
 
     @staticmethod
     def _get_begin_trail(seq):
