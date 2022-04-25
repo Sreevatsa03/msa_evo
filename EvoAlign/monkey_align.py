@@ -119,18 +119,6 @@ class MonkeyAlign():
         # return score
         return match_score
 
-    """# assists a fitness criteria
-    def _split_align(self):
-        ''' splits the alignment into first and second half to run sum pairs score
-        we want to get the seq
-
-        Returns:
-
-        '''
-        first_half = self.seqs[:int(0.5*len(self.seqs))]
-        second_half = self.seqs[int(0.5*len(self.seqs)):]
-        
-        return first_half, second_half"""
 
     def get_seqs(self):
         """ Retrieve array of sequences

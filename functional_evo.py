@@ -13,8 +13,6 @@ import os
 BLOSUM = {45: bl.BLOSUM(45), 50: bl.BLOSUM(50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90), 'HYDRO': AminoAcid().hydropthy_dict, 'VOL': AminoAcid().volume_dict}
 
 # agent
-
-
 def smith_waterman_half_align(curr_align):
     """ takes in MonkeyAlign object
 
@@ -132,7 +130,7 @@ def main():
     # add initial solution
     E1.add_solution(initial_object)
 
-    E1.evolve(1000, dom=100, status=100)
+    E1.evolve(1000, dom=1000, status=100)
 
     E1.save_solutions()
     E1.visualize()

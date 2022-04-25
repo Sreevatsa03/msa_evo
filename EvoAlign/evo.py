@@ -176,6 +176,6 @@ class Evo:
         plt.savefig("3D_scatter.png")
 
         # plot pairplot
-        df = pd.read_csv('solutions.csv')
+        df = pd.read_csv('solutions.csv').drop(columns=['Unnamed: 0'])
         sns.pairplot(data=df)
         plt.savefig('pairplot.png')
