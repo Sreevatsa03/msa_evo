@@ -1,21 +1,24 @@
+"""
+Currently meant to be a future replacement of Align class
+"""
 from Bio import SeqIO
 import numpy as np
-from collections import Counter
-import itertools
-import copy
 import blosum as bl
+import random as rnd
+from math import floor
 
 
 DELETION, INSERTION, MATCH = range(3)
+BLOSUM_MATRICES = {45: bl.BLOSUM(45), 50: bl.BLOSUM(
+    50), 62: bl.BLOSUM(62), 80: bl.BLOSUM(80), 90: bl.BLOSUM(90)}
+
 
 class Align():
 
     def __init__(self):
-
         # Numpy array of character arrays (with trailing gaps)
         self.seqs = []
 
-    # this calls read_fasta
     def _read_fasta(self, files):
         """ Read in fasta file(s)
 
@@ -75,9 +78,11 @@ class Align():
 
         return self.seqs
 
-    #FITNESS CRITERIA
     def sum_pairs_score(self, matrix=bl.BLOSUM(62)):
-        """ Calculates the sum of pairs for matches, mismatches, and gaps
+        """ Calculates score across all columns for matches, mismatches, and gaps
+
+            Args:
+                matrix (bl.BLOSUM matrix): BLOSUM matrix as eval system
 
             Return:
                 score (int): sum of pairs score for the fasta array
@@ -88,140 +93,28 @@ class Align():
 
         # Iterates through each position in the alignment
         for pos in self.seqs.T[::-1]:
-
             # use substition matrix to score matches and mismatches
             score += sum([matrix[x + y] for i, x in enumerate(pos)
-                               for j, y in enumerate(pos) if i > j])
-        return score
-
-    #Not for evo framework
-    def count_gaps(self):
-        """ Calculates the sum of pairs for matches, mismatches, and gaps
-
-            Return:
-                score (int): sum of pairs score for the fasta array
-        """
-
-        # Initialize score
-        gap_score = 0
-
-        # Iterates through each position in the alignment
-        for pos in self.seqs.T:
-
-            # Subtracts 1 at each position if a gap is present
-            gap_score = sum([-1 if '*' in (x, y) else 0 for i, x in enumerate(pos)
-                             for j, y in enumerate(pos) if i > j])
-
-        # return score
-        return gap_score
-
-    #Not for evo framework
-    def count_matches(self):
-        """ Calculates the sum of pairs for matches, mismatches, and gaps
-
-            Return:
-                score (int): sum of pairs score for the fasta array
-        """
-
-        # Initialize score
-        match_score = 0
-
-        # Iterates through each position in the alignment
-        for pos in self.seqs.T:
-
-            # 1 for a match and then -1 if mismatch
-            match_score = sum([1 if x == y else -1 for i, x in enumerate(pos)
-                               for j, y in enumerate(pos) if i > j])
-
-        # return score
-        return match_score
-
-    # https://tiefenauer.github.io/blog/smith-waterman/
+                          for j, y in enumerate(pos) if i > j])
+        return round(score)
 
     @staticmethod
-    def _seq_comparison(a, b, matrix=bl.BLOSUM(62)):
-        """ Calculates the comparison score of the inputted sequences
+    def _split_seqs(seq1, seq2, mod_len):
+        """ Helper function for splitting sequences into smaller chunk to align """
 
-            Args:
-                a (np.array): first sequence
-                b (np.array): second sequence
+        # get max idx we can split seq from
+        max_idx = floor(len(seq1) - (mod_len * len(seq1)))
 
-            Return:
-                score (int): comparison score for inputted sequences
-        """
+        # start and end pos of seq chunk
+        start = rnd.choice(range(max_idx + 1))
+        end = floor(start + (mod_len * len(seq1)))
 
-        seq_array = np.array([a, b])
+        # return part of seq1 to modify, part of seq2 to modify, start, end
+        return seq1[start:end], seq2[start:end], start, end
 
-        # Initialize score
-        score = 0
-
-        # Iterates through each position in the alignment
-        for pos in seq_array.T[::-1]:
-            # 1 for a match and then -1 if mismatch
-            score += sum([matrix[x + y] for i, x in enumerate(pos)
-                               for j, y in enumerate(pos) if i > j])
-        return score
-
-    def get_star_matrix(self):
-        """Gets star alignment matrix (used to get root sequence)
-
-            Returns: self.star_matrix (np.array): star alignment matrix
-        """
-
-        # Check to make sure all sequences are the same length
-        # https://stackoverflow.com/questions/35791051/better-way-to-check-if-all-lists-in-a-list-are-the-same-length
-        it = iter(self.seqs)
-        the_len = len(next(it))
-        if not all(len(l) == the_len for l in it):
-            raise ValueError('not all sequences have same length!')
-
-        # Initialize the matrix (with a non-integer value that _seq_comparison won't return)
-        # np.empty((len(self.seqs), len(self.seqs))) * np.nan
-        star_matrix = np.ones((len(self.seqs), len(self.seqs))) * 0.5
-
-        # Iterate through the rows and columns of the star matrix
-        for idx_row, row in enumerate(self.seqs):
-            for idx_col, col in enumerate(self.seqs):
-
-                # For non-diagonal comparisons
-                if idx_row != idx_col:
-
-                    # If score hasn't been calculated (default value is 0.5)
-                    if star_matrix[idx_row, idx_col] == 0.5:
-
-                        # Calculate score and assign to position and reverse position
-                        star_matrix[idx_row, idx_col] = self._seq_comparison(
-                            row, col)
-                        star_matrix[idx_col,
-                                    idx_row] = star_matrix[idx_row, idx_col]
-
-                # Reassign diagonal score from 0.5 to 0
-                else:
-                    star_matrix[idx_row, idx_col] = 0
-
-        return star_matrix
-
-    def get_root_seq(self):
-        """ Creates star alignment matrix to select root sequence
-            Uses sum_pair_scores to compare sequence similarity
-
-            Returns:
-                (np.array): Sequence with the highest similarity score
-                (most similar to all the sequences (root sequence))
-        """
-        mat = self.get_star_matrix()
-
-        root_idx = np.sum(mat, axis=1).argmax()
-
-        if self.get_star_matrix()[root_idx].argmax() == root_idx:
-            max = np.sort(mat[root_idx])[-2]
-            max_idx = list(self.get_star_matrix()[root_idx]).index(max)
-
-        return root_idx, max_idx
-
-    # Agent
-    def smith_waterman(self, seq1, seq2, insertion_penalty = -1, deletion_penalty = -1,
-                    mismatch_penalty = -1, match_score = 2):
+    # Modification Agent, aligns two random seqs, returns entire alignment
+    def smith_waterman(self, mod_len, insertion_penalty=-1, deletion_penalty=-1,
+                       mismatch_penalty=-1, match_score=2):
         """
         Find the optimum local sequence alignment for the sequences `seq1`
         and `seq2` using the Smith-Waterman algorithm. Optional keyword
@@ -239,6 +132,15 @@ class Align():
         AGCAGACT-
         A-CACACTA
         """
+        # get target variables from _two_rand_seqs() method
+        # static_lst is a list of np arrays of all the other alignments
+        full_seq1, full_seq2, static_lst = self._two_rand_seqs()
+
+        # extract part of seqs to be modified
+        seq1, seq2, start, end = self._split_seqs(
+            full_seq1, full_seq2, mod_len)
+
+        # get the lengths
         m, n = len(seq1), len(seq2)
 
         # Construct the similarity matrix in p[i][j], and remember how
@@ -259,8 +161,11 @@ class Align():
         # Yield the aligned sequences one character at a time in reverse
         # order.
         def backtrack():
+
             i, j = m, n
-            while i > 0 or j > 0:
+            # CHANGED HERE FROM 'OR' TO 'AND'
+            while i > 0 and j > 0:
+                # IS THIS REDUNDANT?
                 assert i >= 0 and j >= 0
                 if q[i][j] == MATCH:
                     i -= 1
@@ -273,17 +178,58 @@ class Align():
                     i -= 1
                     yield seq1[i], '*'
                 else:
-                    assert(False)
+                    assert (False)
 
-        # seq1_aligned, seq2_aligned = [''.join(reversed(s)) for s in zip(*backtrack())]
+        seq1_aligned, seq2_aligned = [
+            ''.join(reversed(s)) for s in zip(*backtrack())]
 
-        # return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
+        seq1_aligned = np.concatenate(
+            (full_seq1[:start], np.array(list(seq1_aligned)), full_seq1[end:]))
+        seq2_aligned = np.concatenate(
+            (full_seq2[:start], np.array(list(seq2_aligned)), full_seq2[end:]))
 
-        return [''.join(reversed(s)) for s in zip(*backtrack())]
+        # call _combine_again method to convert to full alignment
+        self._combine_again(seq1_aligned, seq2_aligned, static_lst=static_lst)
 
-    def sw(self, seq1, seq2, insertion_penalty = -1, deletion_penalty = -1, mismatch_penalty = -1, match_score = 2):
-        seq1_aligned, seq2_aligned = self.smith_waterman(seq1, seq2, insertion_penalty, deletion_penalty,
-                    mismatch_penalty, match_score)
+        # return self
+        return self
 
-        return np.array(list(seq1_aligned)), np.array(list(seq2_aligned))
+    def _two_rand_seqs(self):
+        """ finds two random sequences to align, saves the other sequences as a list of np.arrays
 
+        Returns:
+            seq1
+            seq2
+            static_lst
+
+        """
+        # Shuffle the current alignment
+        np.random.shuffle(self.seqs)
+
+        # Select 2 random sequences (first 2 because sequences were shuffled)
+        return self.seqs[0], self.seqs[1], [static for static in self.seqs[2:]]
+
+    def _combine_again(self, seq1, seq2, static_lst):
+        """ self.seqs is now the 2 new alignments and the static remainders, adjusted for new length
+        """
+        # first we place them all in the same list
+        static_lst.append(seq1)
+        static_lst.append(seq2)
+
+        # set list to self.seqs
+        self.seqs = static_lst
+
+        # add trailing sequences
+        self._add_trailing()
+
+        # convert list of arrays to 2D ndarray
+        self.seqs = np.array(self.seqs, dtype='<U1')
+
+    # def convert_to_str(self):
+    #     """ will return a string version of the alignment
+    #     returns a list of strings """
+
+    #     return [''.join(self.seqs[i]) for i in range(self.num_seqs)]
+
+    # def __repr__(self):
+    #     return str(self.seqs)

@@ -11,6 +11,9 @@ from functools import reduce
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 
 class Evo:
@@ -51,13 +54,13 @@ class Evo:
         new_solution = op(picks)
         self.add_solution(new_solution)
 
-    def evolve(self, n=1, dom=100, status=100, sync=1000):
+    def evolve(self, gens=1, dom=100, status=100, sync=1000):
         """ Run n random agents (default=1)
         dom defines how often we remove dominated (unfit) solutions
         status defines how often we display the current population """
 
         agent_names = list(self.agents.keys())
-        for i in range(n):
+        for i in range(gens):
             pick = rnd.choice(agent_names)
             self.run_agent(pick)
 
@@ -124,24 +127,22 @@ class Evo:
             rslt += str(dict(eval)) + ":\t" + str(sol) + "\n"
         return rslt
 
-    def _data_to_dict(self):
+    def _data_to_df(self):
         """ Convert fitness criteria and solutions to dict """
 
         # Gets a list of solutions and fitness criteria
         solutions = list(self.pop.keys())
-
-
-
         fitness = list(self.fitness.keys())
 
         # Creates a dictionary where key is criteria and value is score list
 
         alignment_dict = {key: [[fit[1] for fit in val if fit[0] == key][0]
-                      for val in solutions]
-                for key in fitness}
+                                for val in solutions]
+                          for key in fitness}
 
+        df = pd.DataFrame(alignment_dict)
 
-        return alignment_dict
+        return df
 
     # sree and john pls ignore this and do not delete for now
     def _get_str_alignment(self):
@@ -151,17 +152,6 @@ class Evo:
             str_list = alignment.convert_to_str()
             for seq in str_list:
                 print(seq)
-
-
-    def save_solutions(self):
-        """ Save the solutions in the population in a csv file """
-
-        output_dict = self._data_to_dict()
-
-        df = pd.DataFrame(output_dict)
-
-
-        df.to_csv('solutions.csv')
 
     def visualize(self, axes=(0, 1, 2)):
         """ Create two visualizations to show the tradeoffs between agents: 3D scatterplot and pairplot """
@@ -195,6 +185,30 @@ class Evo:
         plt.savefig("3D_scatter.png")
 
         # plot pairplot
-        df = pd.read_csv('solutions.csv').drop(columns=['Unnamed: 0'])
+        df = self._data_to_df()
         sns.pairplot(data=df)
         plt.savefig('pairplot.png')
+
+    def save_to_fasta(self, rankings=[]):
+        """ Save population solution to fasta file """
+
+        # create list of rankings for fitness criteria
+        if len(rankings) == 0:
+            fit_rank = list(range(len(self.fitness.keys())))
+        else:
+            fit_rank = [list(self.fitness.keys()).index(fit)
+                        for fit in rankings]
+
+        # population keys
+        sols = list(self.pop.keys())
+
+        # sort keys by score based on fitness criteria ranking
+        sols = sorted(sols, key=lambda x: [x[i][1] for i in fit_rank])[::-1]
+
+        # convert solution to list of strings
+        seqs = [''.join(seq) for seq in self.pop[sols[0]].seqs]
+
+        # write to fasta
+        records = (SeqRecord(Seq(seq), str(index))
+                   for index, seq in enumerate(seqs))
+        SeqIO.write(records, "aligned.fasta", "fasta")
