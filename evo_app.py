@@ -14,7 +14,10 @@ evo_a = EvoAlign()
 evo_a.read_fasta(all)
 
 # run alignment and get visualizations
-evo_a.align(gens=2000, dom=100, status=100, show=True)
+evo_a.align(gens=1000, dom=100, status=100, show=True)
+
+# output list of fitness criteria
+evo_a.fitness_criteria()
 
 # saves alignment to fasta
 evo_a.save_alignment()

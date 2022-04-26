@@ -107,7 +107,7 @@ class EvoAlign():
         print(list(self.Evo.fitness.keys()))
 
     def save_alignment(self, rankings=[]):
-        """ Save a best alignment solution based on ranking of fitness criteria
+        """ Save a best alignment solution based on ranking of fitness criteria. The default order is BLOSUM62, Hydropathy, Volume
 
             Args:
                 rankings = (list(str)): list of fitness criteria in order of importance to alignment (most important to least important)
