@@ -231,5 +231,5 @@ class Align():
 
     #     return [''.join(self.seqs[i]) for i in range(self.num_seqs)]
 
-    # def __repr__(self):
-    #     return str(self.seqs)
+    def __repr__(self):
+        return str(self.seqs)

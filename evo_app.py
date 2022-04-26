@@ -1,10 +1,14 @@
-from EvoAlign import EvoAlign
+from EvoAlign import EvoAlign, Evo
 
-dash = 'data_sources/P53_test_data/dash.fasta'
-dog = 'data_sources/P53_test_data/canis_lupus_familiaris.fasta'
-human = 'data_sources/P53_test_data/homo_sapiens.fasta'
-mouse = 'data_sources/P53_test_data/mus_musculus.fasta'
-all = 'data_sources/P53_test_data/all.fasta'
+
+dash = 'data/dash.fasta'
+dog = 'data/canis_lupus_familiaris.fasta'
+human = 'data/homo_sapiens.fasta'
+mouse = 'data/mus_musculus.fasta'
+all = 'data/all.fasta'
 fastas = [dog, human, mouse]
  
 
+evo_a = EvoAlign()
+evo_a.read_fasta(all)
+evo_a.align()

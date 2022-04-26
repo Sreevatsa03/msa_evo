@@ -165,7 +165,7 @@ class Evo:
         # Sets the axes based on user preference or default and makes dict
         fit = list(self.fitness.keys())
         axes = [fit.index(num) if num in fit else num for num in axes]
-        dims_dict = self._data_to_dict()
+        dims_dict = self._data_to_df()
 
         # Sets the labels for the scatter plot
         ax.set_xlabel(f'{fit[axes[0]]}')
