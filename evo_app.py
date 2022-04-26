@@ -11,4 +11,4 @@ fastas = [dog, human, mouse]
 
 evo_a = EvoAlign()
 evo_a.read_fasta(all)
-evo_a.align()
+evo_a.align(gens=2000, dom=100, status=100)

@@ -225,11 +225,5 @@ class Align():
         # convert list of arrays to 2D ndarray
         self.seqs = np.array(self.seqs, dtype='<U1')
 
-    # def convert_to_str(self):
-    #     """ will return a string version of the alignment
-    #     returns a list of strings """
-
-    #     return [''.join(self.seqs[i]) for i in range(self.num_seqs)]
-
     def __repr__(self):
         return str(self.seqs)
