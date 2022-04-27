@@ -3,7 +3,7 @@ from dash import Dash, html
 import dash_bio as dashbio
 from Bio import SeqIO
 
-
+""" CURRENTLY NON-FUNCTIONAL """
 class Chart():
 
     def __init__(self):

@@ -112,28 +112,29 @@ class Align():
         # return part of seq1 to modify, part of seq2 to modify, start, end
         return seq1[start:end], seq2[start:end], start, end
 
-    # Modification Agent, aligns two random seqs, returns entire alignment
+
     def smith_waterman(self, mod_len, insertion_penalty=-1, deletion_penalty=-1,
                        mismatch_penalty=-1, match_score=2):
         """
-        Find the optimum local sequence alignment for the sequences `seq1`
-        and `seq2` using the Smith-Waterman algorithm. Optional keyword
-        arguments give the gap-scoring scheme:
+        Find the optimum local sequence alignment for the sequences `seq1`\ 
+        and `seq2` using the Smith-Waterman algorithm. Optional keyword\ 
+        arguments give the gap-scoring scheme. 
 
-        `insertion_penalty` penalty for an insertion (default: -1)
-        `deletion_penalty`  penalty for a deletion (default: -1)
-        `mismatch_penalty`  penalty for a mismatch (default: -1)
-        `match_score`       score for a match (default: 2)
+            Args:
+                mod_len (float): proportion of sequence to be modified by smith waterman
+                insertion_penalty (int): penalty for an insertion (default: -1)
+                deletion_penalty (int): penalty for a deletion (default: -1)
+                mismatch_penalty (int): penalty for a mismatch (default: -1)
+                match_score (int): score for a match (default: 2)
 
-        See <http://en.wikipedia.org/wiki/Smith-Waterman_algorithm>.
+            Return:
+                self.seqs (list[ndarray]): list of amino acid sequence ndarrays
 
-        #>>> for s in smith_waterman('AGCAGACT', 'ACACACTA'): print s
-        ...
-        AGCAGACT-
-        A-CACACTA
+            Source Code: 
+                https://stackoverflow.com/questions/12666494/how-do-i-decide-which-way-to-backtrack-in-the-smith-waterman-algorithm
+
         """
         # get target variables from _two_rand_seqs() method
-        # static_lst is a list of np arrays of all the other alignments
         full_seq1, full_seq2, static_lst = self._two_rand_seqs()
 
         # extract part of seqs to be modified
@@ -143,9 +144,7 @@ class Align():
         # get the lengths
         m, n = len(seq1), len(seq2)
 
-        # Construct the similarity matrix in p[i][j], and remember how
-        # we constructed it -- insertion, deletion or (mis)match -- in
-        # q[i][j].
+        # Construct the similarity matrix in p[i][j]
         p = np.zeros((m + 1, n + 1))
         q = np.zeros((m + 1, n + 1))
         for i in range(1, m + 1):
@@ -158,14 +157,11 @@ class Align():
                     match = (p[i - 1][j - 1] + mismatch_penalty, MATCH)
                 p[i][j], q[i][j] = max((0, 0), deletion, insertion, match)
 
-        # Yield the aligned sequences one character at a time in reverse
-        # order.
+        # Yield the aligned sequences one character at a time in reverse order
         def backtrack():
 
             i, j = m, n
-            # CHANGED HERE FROM 'OR' TO 'AND'
             while i > 0 and j > 0:
-                # IS THIS REDUNDANT?
                 assert i >= 0 and j >= 0
                 if q[i][j] == MATCH:
                     i -= 1
@@ -195,14 +191,8 @@ class Align():
         return self
 
     def _two_rand_seqs(self):
-        """ finds two random sequences to align, saves the other sequences as a list of np.arrays
+        """ Finds two random sequences to align, saves the other sequences as a list of np.arrays """
 
-        Returns:
-            seq1
-            seq2
-            static_lst
-
-        """
         # Shuffle the current alignment
         np.random.shuffle(self.seqs)
 
@@ -210,8 +200,8 @@ class Align():
         return self.seqs[0], self.seqs[1], [static for static in self.seqs[2:]]
 
     def _combine_again(self, seq1, seq2, static_lst):
-        """ self.seqs is now the 2 new alignments and the static remainders, adjusted for new length
-        """
+        """ Alters self.seqs to now contain the 2 new alignments and the static remainders, adjusted for new length """
+
         # first we place them all in the same list
         static_lst.append(seq1)
         static_lst.append(seq2)

@@ -2,6 +2,7 @@ import pandas as pd
 from itertools import product
 from typing import NamedTuple
 
+# url to website scraped for hydropathy and volume data
 url = 'https://www.imgt.org/IMGTeducation/Aide-memoire/_UK/aminoacids/IMGTclasses.html'
 
 
@@ -17,7 +18,7 @@ def make_dict(df):
 
 
 def clean_df(df):
-    '''Cleans df and adds property name as a column value'''
+    ''' Cleans df and adds property name as a column value '''
 
     df.columns = df.iloc[0]
     df.drop([0, 2], inplace=True)
@@ -34,5 +35,7 @@ df_volume = clean_df(pd.read_html(url)[1])
 
 
 class AminoAcid(NamedTuple):
+    """ NamedTuple of the hydropathy and volume scoring matrices """
+
     hydropthy_dict: dict = make_dict(df_hydropathy)
     volume_dict: dict = make_dict(df_volume)

@@ -157,9 +157,9 @@ class Evo:
         """ Create two visualizations to show the tradeoffs between agents: 3D scatterplot and pairplot """
 
         # plot 3D scatterplot and pairplot
-        sns.set(style="darkgrid")
+        sns.set(style="darkgrid", font_scale=1.2)
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(111, projection='3d')
 
         # Sets the axes based on user preference or default and makes dict
@@ -168,9 +168,10 @@ class Evo:
         dims_dict = self._data_to_df()
 
         # Sets the labels for the scatter plot
-        ax.set_xlabel(f'{fit[axes[0]]}')
-        ax.set_ylabel(f'{fit[axes[1]]}')
-        ax.set_zlabel(f'{fit[axes[2]]}')
+        # ax.tick_params(axis='x', pad=30)
+        ax.set_xlabel(f'{fit[axes[0]]}', labelpad=10)
+        ax.set_ylabel(f'{fit[axes[1]]}', labelpad=10)
+        ax.set_zlabel(f'{fit[axes[2]]}', labelpad=10)
 
         # Sets the dimensions for the scatter plot
         x = dims_dict[fit[axes[0]]]
